@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball Game</title>
+    <style>
+        body {
+            text-align: center;
+        }
+        canvas {
+            background: #222;
+            display: block;
+            margin: auto;
+            transition: background 0.5s ease-in-out;
+        }
+        #score, #lives {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #highScore {
+            font-size: 32px;
+            font-weight: bold;
+            color: darkred;
+            margin-top: 10px;
+            display: none;
+        }
+        #gameOver {
+            font-size: 40px;
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
+        #celebration {
+            font-size: 50px;
+            display: none;
+            margin-top: 10px;
+        }
+        #restartButton, #startButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bouncing Ball Game</h1>
+    
+    <p id="startScreen">Click to Start</p>
+    <button id="startButton" onclick="startGame()">Start Game</button>
+
+    <canvas id="gameCanvas" width="400" height="500" style="display:none;"></canvas>
+    <p id="celebration">🎊🎉</p>
+    <p id="score">Your Score: 0</p>
+    <p id="lives">Lives: 0</p> <!-- ✅ Life Counter -->
+    <p id="gameOver">You are out!</p>
+    <p id="highScore">Highest Score: 0</p>
+    <button id="restartButton" onclick="restartGame()" style="display:none;">Restart</button>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let ball, square, score, gameOver, highScore = 0, lives = 0;
+        let gameStarted = false;
+
+        function getRandomColor() {
+            const colors = ["#FF5733", "#33FF57", "#3357FF", "#FFD700", "#FF1493", "#00FFFF"];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function startGame() {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("gameCanvas").style.display = "block";
+            document.getElementById("score").style.display = "block";
+            document.getElementById("lives").style.display = "block"; 
+
+            canvas.style.background = getRandomColor(); // ✅ Random color at the start
+            initializeGame();
+            gameLoop();
+        }
+
+        function initializeGame() {
+            ball = { x: 200, y: 50, radius: 10, dx: 5, dy: 5 };
+            square = { x: 175, y: 460, width: 80, height: 10, speed: 60 };
+            score = 0;
+            gameOver = false;
+            lives = 0; // Start with 0 lives
+            gameStarted = true;
+
+            document.getElementById("gameOver").style.display = "none";
+            document.getElementById("restartButton").style.display = "none";
+            document.getElementById("celebration").style.display = "none"; 
+            document.getElementById("highScore").style.display = "none";
+            document.getElementById("score").innerText = "Your Score: 0";
+            document.getElementById("lives").innerText = "Lives: " + lives;
+        }
+
+        document.addEventListener("keydown", moveSquare);
+
+        function moveSquare(event) {
+            if (!gameStarted) return;
+            if (event.key === "ArrowLeft" && square.x > 0) {
+                square.x -= square.speed;
+            } else if (event.key === "ArrowRight" && square.x < canvas.width - square.width) {
+                square.x += square.speed;
+            }
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+            }
+
+            if (ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+            }
+
+            if (
+                ball.y + ball.radius >= square.y &&
+                ball.x >= square.x &&
+                ball.x <= square.x + square.width
+            ) {
+                ball.dy *= -1;
+                score++;
+
+                document.getElementById("score").innerText = "Your Score: " + score;
+
+                // ✅ Change background color every 12+ score
+                if (score % 12 === 0) {
+                    canvas.style.background = getRandomColor();
+                }
+
+                // ✅ Give extra life at 100+ score
+                if (score === 100) {
+                    lives = 1;
+                    document.getElementById("lives").innerText = "Lives: " + lives;
+                }
+
+                // 🎉 Show emoji every 25 points
+                if (score % 25 === 0) {
+                    document.getElementById("celebration").style.display = "block";
+                    setTimeout(() => {
+                        document.getElementById("celebration").style.display = "none";
+                    }, 3000);
+                }
+
+                if (score > highScore) {
+                    highScore = score;
+                }
+            }
+
+            if (ball.y + ball.radius > canvas.height) {
+                if (lives > 0) {
+                    lives--; // Use the extra life
+                    document.getElementById("lives").innerText = "Lives: " + lives;
+                    ball.y = 50; // Reset ball position
+                    ball.dy = 5; // Restore speed
+                } else {
+                    gameOver = true;
+                    document.getElementById("gameOver").style.display = "block";
+                    document.getElementById("restartButton").style.display = "block";
+                    
+                    document.getElementById("highScore").innerText = "Highest Score: " + highScore;
+                    document.getElementById("highScore").style.display = "block";
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "blue";
+            ctx.fillRect(square.x, square.y, square.width, square.height);
+        }
+
+        function restartGame() {
+            initializeGame();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+    </script>
+</body>
+</html>
