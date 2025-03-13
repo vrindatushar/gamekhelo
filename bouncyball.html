@@ -7,44 +7,67 @@
     <style>
         body {
             text-align: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
         }
         canvas {
             background: #222;
             display: block;
             margin: auto;
+            width: 90vw;  /* Makes the game fit on mobile */
+            max-width: 400px;  /* Limits size on larger screens */
+            height: 80vh;
+            max-height: 500px;
             transition: background 0.5s ease-in-out;
         }
+        #controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .control-btn {
+            padding: 15px 25px;
+            font-size: 18px;
+            margin: 10px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
         #score, #lives {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
             margin-top: 10px;
         }
         #highScore {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: darkred;
             margin-top: 10px;
             display: none;
         }
         #gameOver {
-            font-size: 40px;
+            font-size: 30px;
             color: red;
             margin-top: 20px;
             display: none;
         }
         #celebration {
-            font-size: 50px;
+            font-size: 40px;
             display: none;
             margin-top: 10px;
         }
         #restartButton, #startButton {
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-size: 16px;
             margin-top: 10px;
             background-color: blue;
             color: white;
             border: none;
             cursor: pointer;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -54,10 +77,16 @@
     <p id="startScreen">Click to Start</p>
     <button id="startButton" onclick="startGame()">Start Game</button>
 
-    <canvas id="gameCanvas" width="400" height="500" style="display:none;"></canvas>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="controls">
+        <button class="control-btn" onclick="moveLeft()">⬅ Left</button>
+        <button class="control-btn" onclick="moveRight()">Right ➡</button>
+    </div>
+
     <p id="celebration">🎊🎉</p>
     <p id="score">Your Score: 0</p>
-    <p id="lives">Lives: 0</p> <!-- ✅ Life Counter -->
+    <p id="lives">Lives: 0</p>
     <p id="gameOver">You are out!</p>
     <p id="highScore">Highest Score: 0</p>
     <button id="restartButton" onclick="restartGame()" style="display:none;">Restart</button>
@@ -69,6 +98,13 @@
         let ball, square, score, gameOver, highScore = 0, lives = 0;
         let gameStarted = false;
 
+        function resizeCanvas() {
+            canvas.width = Math.min(window.innerWidth * 0.9, 400);
+            canvas.height = Math.min(window.innerHeight * 0.8, 500);
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas(); // Adjust on page load
+
         function getRandomColor() {
             const colors = ["#FF5733", "#33FF57", "#3357FF", "#FFD700", "#FF1493", "#00FFFF"];
             return colors[Math.floor(Math.random() * colors.length)];
@@ -77,21 +113,20 @@
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("startButton").style.display = "none";
-            document.getElementById("gameCanvas").style.display = "block";
             document.getElementById("score").style.display = "block";
             document.getElementById("lives").style.display = "block"; 
 
-            canvas.style.background = getRandomColor(); // ✅ Random color at the start
+            canvas.style.background = getRandomColor();
             initializeGame();
             gameLoop();
         }
 
         function initializeGame() {
-            ball = { x: 200, y: 50, radius: 10, dx: 5, dy: 5 };
-            square = { x: 175, y: 460, width: 80, height: 10, speed: 60 };
+            ball = { x: canvas.width / 2, y: 50, radius: 10, dx: 5, dy: 5 };
+            square = { x: canvas.width / 2 - 40, y: canvas.height - 40, width: 80, height: 10, speed: 40 };
             score = 0;
             gameOver = false;
-            lives = 0; // Start with 0 lives
+            lives = 0; 
             gameStarted = true;
 
             document.getElementById("gameOver").style.display = "none";
@@ -106,9 +141,21 @@
 
         function moveSquare(event) {
             if (!gameStarted) return;
-            if (event.key === "ArrowLeft" && square.x > 0) {
+            if (event.key === "ArrowLeft") {
+                moveLeft();
+            } else if (event.key === "ArrowRight") {
+                moveRight();
+            }
+        }
+
+        function moveLeft() {
+            if (square.x > 0) {
                 square.x -= square.speed;
-            } else if (event.key === "ArrowRight" && square.x < canvas.width - square.width) {
+            }
+        }
+
+        function moveRight() {
+            if (square.x < canvas.width - square.width) {
                 square.x += square.speed;
             }
         }
@@ -137,18 +184,15 @@
 
                 document.getElementById("score").innerText = "Your Score: " + score;
 
-                // ✅ Change background color every 12+ score
                 if (score % 12 === 0) {
                     canvas.style.background = getRandomColor();
                 }
 
-                // ✅ Give extra life at 100+ score
                 if (score === 100) {
                     lives = 1;
                     document.getElementById("lives").innerText = "Lives: " + lives;
                 }
 
-                // 🎉 Show emoji every 25 points
                 if (score % 25 === 0) {
                     document.getElementById("celebration").style.display = "block";
                     setTimeout(() => {
@@ -163,10 +207,10 @@
 
             if (ball.y + ball.radius > canvas.height) {
                 if (lives > 0) {
-                    lives--; // Use the extra life
+                    lives--;
                     document.getElementById("lives").innerText = "Lives: " + lives;
-                    ball.y = 50; // Reset ball position
-                    ball.dy = 5; // Restore speed
+                    ball.y = 50;
+                    ball.dy = 5;
                 } else {
                     gameOver = true;
                     document.getElementById("gameOver").style.display = "block";
