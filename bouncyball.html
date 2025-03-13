@@ -16,7 +16,7 @@
             display: block;
             margin: auto;
             width: 90vw;  /* Makes the game fit on mobile */
-            max-width: 400px;  /* Limits size on larger screens */
+            max-width: 400px;
             height: 80vh;
             max-height: 500px;
             transition: background 0.5s ease-in-out;
@@ -24,12 +24,13 @@
         #controls {
             display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 10px; /* Adds space between buttons */
             margin-top: 10px;
         }
         .control-btn {
-            padding: 15px 25px;
+            padding: 15px 20px;
             font-size: 18px;
-            margin: 10px;
             background-color: blue;
             color: white;
             border: none;
@@ -59,16 +60,6 @@
             display: none;
             margin-top: 10px;
         }
-        #restartButton, #startButton {
-            padding: 12px 20px;
-            font-size: 16px;
-            margin-top: 10px;
-            background-color: blue;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
@@ -78,9 +69,10 @@
     <button id="startButton" onclick="startGame()">Start Game</button>
 
     <canvas id="gameCanvas"></canvas>
-    
+
     <div id="controls">
         <button class="control-btn" onclick="moveLeft()">⬅ Left</button>
+        <button id="restartButton" class="control-btn" onclick="restartGame()" style="display:none;">🔄 Restart</button>
         <button class="control-btn" onclick="moveRight()">Right ➡</button>
     </div>
 
@@ -89,7 +81,6 @@
     <p id="lives">Lives: 0</p>
     <p id="gameOver">You are out!</p>
     <p id="highScore">Highest Score: 0</p>
-    <button id="restartButton" onclick="restartGame()" style="display:none;">Restart</button>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -103,7 +94,7 @@
             canvas.height = Math.min(window.innerHeight * 0.8, 500);
         }
         window.addEventListener("resize", resizeCanvas);
-        resizeCanvas(); // Adjust on page load
+        resizeCanvas(); 
 
         function getRandomColor() {
             const colors = ["#FF5733", "#33FF57", "#3357FF", "#FFD700", "#FF1493", "#00FFFF"];
