@@ -15,7 +15,7 @@
             background: #222;
             display: block;
             margin: auto;
-            width: 90vw;  /* Makes the game fit on mobile */
+            width: 90vw;
             max-width: 400px;
             height: 80vh;
             max-height: 500px;
@@ -25,7 +25,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px; /* Adds space between buttons */
+            gap: 10px;
             margin-top: 10px;
         }
         .control-btn {
@@ -94,7 +94,7 @@
             canvas.height = Math.min(window.innerHeight * 0.8, 500);
         }
         window.addEventListener("resize", resizeCanvas);
-        resizeCanvas(); 
+        resizeCanvas();
 
         function getRandomColor() {
             const colors = ["#FF5733", "#33FF57", "#3357FF", "#FFD700", "#FF1493", "#00FFFF"];
@@ -113,11 +113,11 @@
         }
 
         function initializeGame() {
-            ball = { x: canvas.width / 2, y: 50, radius: 10, dx: 5, dy: 5 };
-            square = { x: canvas.width / 2 - 40, y: canvas.height - 40, width: 80, height: 10, speed: 40 };
+            ball = { x: canvas.width / 2, y: 50, radius: 10, dx: 3, dy: 3 }; // ✅ Slower Start
+            square = { x: canvas.width / 2 - 40, y: canvas.height - 40, width: 80, height: 10, speed: 30 };
             score = 0;
             gameOver = false;
-            lives = 0; 
+            lives = 0;
             gameStarted = true;
 
             document.getElementById("gameOver").style.display = "none";
@@ -173,6 +173,12 @@
                 ball.dy *= -1;
                 score++;
 
+                // ✅ Gradually Increase Speed
+                if (score % 10 === 0) {
+                    ball.dx *= 1.1;
+                    ball.dy *= 1.1;
+                }
+
                 document.getElementById("score").innerText = "Your Score: " + score;
 
                 if (score % 12 === 0) {
@@ -201,7 +207,7 @@
                     lives--;
                     document.getElementById("lives").innerText = "Lives: " + lives;
                     ball.y = 50;
-                    ball.dy = 5;
+                    ball.dy = 3;
                 } else {
                     gameOver = true;
                     document.getElementById("gameOver").style.display = "block";
