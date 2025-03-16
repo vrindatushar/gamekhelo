@@ -42,6 +42,12 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        #gameOver {
+            font-size: 30px;
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
         #highScore {
             font-size: 24px;
             font-weight: bold;
@@ -49,16 +55,12 @@
             margin-top: 10px;
             display: none;
         }
-        #gameOver {
-            font-size: 30px;
-            color: red;
-            margin-top: 20px;
-            display: none;
-        }
         #celebration {
-            font-size: 40px;
+            font-size: 35px;
+            font-weight: bold;
+            color: gold;
+            margin-top: 15px;
             display: none;
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -76,7 +78,7 @@
         <button class="control-btn" onclick="moveRight()">Right ➡</button>
     </div>
 
-    <p id="celebration">🎊🎉</p>
+    <p id="celebration">🎉🥳 😃 Celebration ⭐️</p>
     <p id="score">Your Score: 0</p>
     <p id="lives">Lives: 0</p>
     <p id="gameOver">You are out!</p>
@@ -96,24 +98,26 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
-        function getRandomColor() {
-            const colors = ["#FF5733", "#33FF57", "#3357FF", "#FFD700", "#FF1493", "#00FFFF"];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("startButton").style.display = "none";
             document.getElementById("score").style.display = "block";
             document.getElementById("lives").style.display = "block"; 
+            document.getElementById("celebration").style.display = "none";
 
-            canvas.style.background = getRandomColor();
+            canvas.style.background = getRandomColor(); // ✅ Start with random background
             initializeGame();
             gameLoop();
         }
 
+        function restartGame() {
+            document.getElementById("gameOver").style.display = "none";
+            document.getElementById("restartButton").style.display = "none";
+            startGame(); // ✅ Restart the game properly
+        }
+
         function initializeGame() {
-            ball = { x: canvas.width / 2, y: 50, radius: 10, dx: 3, dy: 3 }; // ✅ Slower Start
+            ball = { x: canvas.width / 2, y: 50, radius: 10, dx: 3, dy: 3 };
             square = { x: canvas.width / 2 - 40, y: canvas.height - 40, width: 80, height: 10, speed: 30 };
             score = 0;
             gameOver = false;
@@ -122,7 +126,6 @@
 
             document.getElementById("gameOver").style.display = "none";
             document.getElementById("restartButton").style.display = "none";
-            document.getElementById("celebration").style.display = "none"; 
             document.getElementById("highScore").style.display = "none";
             document.getElementById("score").innerText = "Your Score: 0";
             document.getElementById("lives").innerText = "Lives: " + lives;
@@ -171,77 +174,74 @@
                 ball.x <= square.x + square.width
             ) {
                 ball.dy *= -1;
+                playSoftSound();
+
                 score++;
 
-                // ✅ Gradually Increase Speed
-                if (score % 10 === 0) {
-                    ball.dx *= 1.1;
-                    ball.dy *= 1.1;
+                if (score % 5 === 0) {
+                    ball.dx *= 1.05;
+                    ball.dy *= 1.05;
                 }
-
-                document.getElementById("score").innerText = "Your Score: " + score;
 
                 if (score % 12 === 0) {
                     canvas.style.background = getRandomColor();
                 }
 
-                if (score === 100) {
-                    lives = 1;
-                    document.getElementById("lives").innerText = "Lives: " + lives;
-                }
-
-                if (score % 25 === 0) {
+                if (score % 50 === 0) {
                     document.getElementById("celebration").style.display = "block";
                     setTimeout(() => {
                         document.getElementById("celebration").style.display = "none";
                     }, 3000);
                 }
 
-                if (score > highScore) {
-                    highScore = score;
-                }
+                if (score > highScore) highScore = score;
+                document.getElementById("score").innerText = "Your Score: " + score;
             }
 
             if (ball.y + ball.radius > canvas.height) {
-                if (lives > 0) {
-                    lives--;
-                    document.getElementById("lives").innerText = "Lives: " + lives;
-                    ball.y = 50;
-                    ball.dy = 3;
-                } else {
-                    gameOver = true;
-                    document.getElementById("gameOver").style.display = "block";
-                    document.getElementById("restartButton").style.display = "block";
-                    
-                    document.getElementById("highScore").innerText = "Highest Score: " + highScore;
-                    document.getElementById("highScore").style.display = "block";
-                }
+                gameOver = true;
+                document.getElementById("gameOver").style.display = "block";
+                document.getElementById("restartButton").style.display = "block";
+                document.getElementById("highScore").innerText = "Highest Score: " + highScore;
+                document.getElementById("highScore").style.display = "block";
             }
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function playSoftSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-            ctx.fillStyle = "red";
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fill();
+            oscillator.type = "sine";  
+            oscillator.frequency.setValueAtTime(220, audioContext.currentTime);  
+            gainNode.gain.setValueAtTime(0.8, audioContext.currentTime);  
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);  
 
-            ctx.fillStyle = "blue";
-            ctx.fillRect(square.x, square.y, square.width, square.height);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), 500);
         }
 
-        function restartGame() {
-            initializeGame();
-            gameLoop();
+        function getRandomColor() {
+            const colors = ["#FFA07A", "#20B2AA", "#FF6347", "#6A5ACD", "#008B8B", "#FF4500", "#2E8B57", "#DA70D6"];
+            return colors[Math.floor(Math.random() * colors.length)];
         }
 
         function gameLoop() {
             update();
             draw();
-            if (!gameOver) {
-                requestAnimationFrame(gameLoop);
-            }
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "red";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "blue";
+            ctx.fillRect(square.x, square.y, square.width, square.height);
         }
     </script>
 </body>
